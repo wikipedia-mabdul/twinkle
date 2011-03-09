@@ -1195,14 +1195,41 @@ twinklespeedy.callbacks = {
 			}	
 
 			if( TwinkleConfig.markSpeedyPagesAsPatrolled && self.params.rcid != '' ) {
-				var query = {
-					'title': wgPageName,
-					'action': 'markpatrolled',
-					'rcid': self.params.rcid
-				};
+				// extract patrol token from "Mark page as patrolled" link on page
+				var patrollinkmatch = /token=(.+)%2B%5C$/.exec($('.patrollink a').attr('href'));
+				
+				if (patrollinkmatch) {
+					var patroltoken = patrollinkmatch[1] + "+\\";
+					var patrolstat = new Status("Marking page as patrolled", "Doing...");
+					(Wikipedia.numberOfActionsLeft)++;
 
-				var wikipedia_wiki = new Wikipedia.wiki( 'Marking page as patrolled', query );
-				wikipedia_wiki.post();
+					var query = {
+						'title': wgPageName,
+						'action': 'markpatrolled',
+						'rcid': self.params.rcid,
+						'token': patroltoken
+					};
+
+					jQuery.ajax( {
+						context: patrolstat,
+						type: 'GET',
+						url: wgServer + wgScriptPath + '/index.php', 
+						data: QueryString.create(query),
+						dataType: 'xml',
+						success: function(xml, textStatus, jqXHR) {
+							this.info(textStatus);
+							Wikipedia.actionCompleted();
+						},
+						error: function(jqXHR, textStatus, errorThrown) {
+							if (textStatus == "parsererror") { // kludge for Firefox 4.0b12
+								this.info("Done");
+								Wikipedia.actionCompleted();
+							} else {
+								this.error(textStatus + ': ' + errorThrown + ' occurred while trying to mark as patrolled.');
+							}
+						}
+					} );
+				}
 			}
 
 			// Notification to first contributor

@@ -27,7 +27,7 @@ twinkleundelete.callback = function twinkleundeleteCallback() {
 	Status.init( div );
 	Window.setContent( div );
 	Window.display();
-	var query = {
+	var query = { 
 		'title': 'Special:Undelete',
 		'target': 'Wikipedia:NeverToBeRestored',
 		'action': 'submit'
